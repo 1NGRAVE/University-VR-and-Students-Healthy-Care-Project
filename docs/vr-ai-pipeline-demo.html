@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VR身心脑协同训练系统 — AI管道演示</title>
+<style>
+/* ===== CSS Custom Properties ===== */
+:root {
+  --color-body: #ff6b6b;
+  --color-body-dark: #e55a5a;
+  --color-mind: #0ea5a5;
+  --color-mind-dark: #0b8c8c;
+  --color-brain: #6366f1;
+  --color-brain-dark: #5254d4;
+  --color-move: #f59e0b;
+  --color-move-dark: #d98c09;
+  --color-good: #10b981;
+  --color-warn: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  --bg-page: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-input: #f8fafc;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", -apple-system, sans-serif;
+  --font-mono: "SF Mono", "Consolas", "Menlo", monospace;
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 140px;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #fff;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.header-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+.header-spacer { flex: 1; }
+.pipeline-minimap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.minimap-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+.minimap-dot:hover { transform: scale(1.15); }
+.minimap-dot.l1 { background: var(--color-body); }
+.minimap-dot.l2 { background: var(--color-mind); }
+.minimap-dot.l3 { background: var(--color-brain); }
+.minimap-dot.l4 { background: #8b5cf6; }
+.minimap-dot.l5 { background: #ec4899; }
+.minimap-dot.l6 { background: #14b8a6; }
+.minimap-dot.active { box-shadow: 0 0 0 4px rgba(255,255,255,0.35); transform: scale(1.1); }
+.minimap-line {
+  width: 26px; height: 2px;
+  background: #475569;
+  margin: 0 1px;
+  border-radius: 1px;
+}
+
+/* ===== Main Layout ===== */
+.app-container {
+  display: flex;
+  gap: 20px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: calc(100vh - 200px);
+}
+
+/* ===== Left Panel ===== */
+.left-panel {
+  width: 370px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.panel-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+}
+.panel-card h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-card h3 .icon-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.icon-dot.body { background: var(--color-body); }
+.icon-dot.mind { background: var(--color-mind); }
+.icon-dot.brain { background: var(--color-brain); }
+.icon-dot.move { background: var(--color-move); }
+
+/* Preset selector */
+.preset-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.preset-select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-family: var(--font-family);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-family: var(--font-family);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--color-info);
+  color: #fff;
+}
+.btn-primary:hover { background: #2563eb; }
+.btn-outline {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.btn-outline:hover { border-color: #94a3b8; color: var(--text-primary); }
+.btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+
+/* Slider styles */
+.slider-group { margin-bottom: 10px; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+.slider-label .name { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+.slider-label .unit { font-size: 0.7rem; color: var(--text-muted); }
+.slider-label .value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  min-width: 50px;
+  text-align: right;
+}
+.slider-desc { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 4px; }
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--color-info);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.slider-body input[type="range"]::-webkit-slider-thumb { border-color: var(--color-body); }
+.slider-mind input[type="range"]::-webkit-slider-thumb { border-color: var(--color-mind); }
+.slider-brain input[type="range"]::-webkit-slider-thumb { border-color: var(--color-brain); }
+.slider-move input[type="range"]::-webkit-slider-thumb { border-color: var(--color-move); }
+
+/* ===== Right Panel ===== */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 4px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-family: var(--font-family);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--color-info);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.tab-btn:hover:not(.active) { color: var(--text-primary); background: var(--bg-input); }
+
+.tab-content { display: none; }
+.tab-content.active { display: flex; flex-direction: column; gap: 12px; }
+
+/* ===== Layer Cards ===== */
+.layer-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.layer-card.pulse { box-shadow: 0 0 0 3px var(--color-info); }
+.layer-card-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.layer-card-header:hover { background: var(--bg-input); }
+.layer-badge {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.layer-badge.l1 { background: var(--color-body); }
+.layer-badge.l2 { background: var(--color-mind); }
+.layer-badge.l3 { background: var(--color-brain); }
+.layer-badge.l4 { background: #8b5cf6; }
+.layer-badge.l5 { background: #ec4899; }
+.layer-badge.l6 { background: #14b8a6; }
+.layer-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex: 1;
+}
+.layer-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.score-chip {
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.73rem;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.score-chip.good { background: #d1fae5; color: #065f46; }
+.score-chip.warn { background: #fef3c7; color: #92400e; }
+.score-chip.danger { background: #fee2e2; color: #991b1b; }
+.score-chip.info { background: #dbeafe; color: #1e40af; }
+.score-chip.neutral { background: #f1f5f9; color: #475569; }
+.layer-chevron { font-size: 0.8rem; color: var(--text-muted); transition: transform 0.3s; }
+.layer-card.open .layer-chevron { transform: rotate(180deg); }
+.layer-card-body {
+  display: none;
+  padding: 0 18px 18px;
+  border-top: 1px solid var(--border-light);
+}
+.layer-card.open .layer-card-body { display: block; }
+
+/* Gauge grid */
+.gauge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.gauge-item {
+  text-align: center;
+  padding: 10px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+}
+.gauge-item .gauge-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.gauge-item .gauge-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin-bottom: 2px;
+}
+svg.gauge-ring { display: block; margin: 0 auto; }
+
+/* Detail rows */
+.detail-section { margin-top: 10px; }
+.detail-section h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  padding-left: 4px;
+  border-left: 3px solid var(--color-info);
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 8px;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.detail-row .key { color: var(--text-secondary); }
+.detail-row .val { font-weight: 600; font-family: var(--font-mono); }
+
+/* Circumplex */
+.circumplex-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.circumplex-box {
+  position: relative;
+  width: 200px; height: 200px;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.circumplex-quad {
+  position: absolute;
+  width: 50%; height: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-align: center;
+  color: rgba(0,0,0,0.45);
+  padding: 4px;
+  line-height: 1.2;
+}
+.cq-tl { top: 0; left: 0; background: #fef2f2; } /* HA-NV 紧张 */
+.cq-tr { top: 0; right: 0; background: #ecfdf5; } /* HA-PV 兴奋 */
+.cq-bl { bottom: 0; left: 0; background: #eff6ff; } /* LA-NV 疲劳 */
+.cq-br { bottom: 0; right: 0; background: #fffbeb; } /* LA-PV 放松 */
+.circumplex-axes-v {
+  position: absolute; left: 50%; top: 0; bottom: 0;
+  width: 1px; background: #94a3b8;
+}
+.circumplex-axes-h {
+  position: absolute; top: 50%; left: 0; right: 0;
+  height: 1px; background: #94a3b8;
+}
+.circumplex-dot {
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  border: 3px solid #fff;
+  box-shadow: var(--shadow-md);
+  transform: translate(-50%, -50%);
+  transition: left 0.5s ease, top 0.5s ease;
+  z-index: 5;
+}
+.circumplex-axis-label {
+  position: absolute;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.cal-top { top: 2px; left: 50%; transform: translateX(-50%); }
+.cal-bottom { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.cal-left { left: 4px; top: 50%; transform: translateY(-50%); }
+.cal-right { right: 4px; top: 50%; transform: translateY(-50%); }
+
+/* Emotion info */
+.emotion-info {
+  flex: 1;
+  min-width: 180px;
+}
+.emotion-info .quadrant-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.emotion-info .quadrant-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* Safety gate alert */
+.safety-alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  display: none;
+}
+.safety-alert.show { display: block; }
+.safety-alert.danger {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 2px solid #fca5a5;
+}
+.safety-alert.warn {
+  background: #fffbeb;
+  color: #92400e;
+  border: 2px solid #fcd34d;
+}
+
+/* Confidence bars */
+.conf-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.conf-bar-label {
+  width: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.conf-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.conf-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.conf-bar-winner { background: var(--color-good); }
+.conf-bar-other { background: var(--border); }
+.conf-bar-score {
+  width: 42px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Final recommendation highlight */
+.rec-highlight {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #ecfdf5, #dbeafe);
+  border: 1px solid #a7f3d0;
+  margin-top: 10px;
+}
+.rec-highlight h4 { font-size: 0.85rem; margin-bottom: 6px; color: #065f46; }
+.rec-highlight p { font-size: 0.8rem; color: var(--text-secondary); margin: 3px 0; }
+.rec-highlight .rec-type {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #065f46;
+}
+
+/* VR output grid */
+.vr-output-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.vr-output-item {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+}
+.vr-output-item .vro-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.vr-output-item .vro-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Trigger list */
+.trigger-list { margin-top: 10px; }
+.trigger-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  border-left: 3px solid;
+}
+.trigger-item.active { border-left-color: var(--color-danger); background: #fef2f2; }
+.trigger-item.inactive { border-left-color: var(--border); color: var(--text-muted); }
+
+/* ===== Pipeline Diagram (Tab 2) ===== */
+.pipeline-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  padding: 20px 0;
+}
+.pipe-node {
+  width: 160px;
+  padding: 14px 10px;
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.pipe-node:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.pipe-node .pn-layer {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.pipe-node .pn-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.pipe-node .pn-key-val {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.pipe-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.pn-l1 .pn-layer { background: var(--color-body); }
+.pn-l1 { border-top: 3px solid var(--color-body); }
+.pn-l2 .pn-layer { background: var(--color-mind); }
+.pn-l2 { border-top: 3px solid var(--color-mind); }
+.pn-l3 .pn-layer { background: var(--color-brain); }
+.pn-l3 { border-top: 3px solid var(--color-brain); }
+.pn-l4 .pn-layer { background: #8b5cf6; }
+.pn-l4 { border-top: 3px solid #8b5cf6; }
+.pn-l5 .pn-layer { background: #ec4899; }
+.pn-l5 { border-top: 3px solid #ec4899; }
+.pn-l6 .pn-layer { background: #14b8a6; }
+.pn-l6 { border-top: 3px solid #14b8a6; }
+
+/* ===== Data Table (Tab 3) ===== */
+.data-table-wrap {
+  overflow-x: auto;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+.data-table th {
+  background: #f8fafc;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+}
+.data-table .td-label {
+  font-family: var(--font-family);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.data-table .section-header td {
+  background: #f1f5f9;
+  font-weight: 700;
+  font-family: var(--font-family);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  padding: 8px 10px;
+}
+
+/* ===== Footer Result Bar ===== */
+.footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+  padding: 14px 28px;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-bar .rec-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.badge-rest { background: #94a3b8; }
+.badge-breathing { background: #0ea5a5; }
+.badge-light { background: #10b981; }
+.badge-moderate { background: #f59e0b; }
+.badge-high { background: #ef4444; }
+.badge-recovery { background: #6366f1; }
+.badge-stop { background: #000; }
+
+.footer-metrics {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-metric {
+  font-size: 0.78rem;
+}
+.footer-metric strong {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+.footer-coach-text {
+  flex: 1;
+  min-width: 250px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.footer-coach-text .coach-quote {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.footer-confidence {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ===== Utility ===== */
+.text-good { color: var(--color-good); }
+.text-warn { color: var(--color-warn); }
+.text-danger { color: var(--color-danger); }
+.text-info { color: var(--color-info); }
+.text-muted { color: var(--text-muted); }
+.mt-2 { margin-top: 8px; }
+.mb-2 { margin-bottom: 8px; }
+
+/* ===== Animations ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+.animate-in {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1100px) {
+  .app-container { flex-direction: column; }
+  .left-panel { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .left-panel .panel-card { flex: 1; min-width: 250px; }
+  .pipe-node { width: 130px; }
+  .vr-output-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .header { flex-wrap: wrap; padding: 10px 14px; }
+  .footer-bar { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 14px; }
+  .gauge-grid { grid-template-columns: 1fr 1fr; }
+  .pipe-arrow { display: none; }
+  .pipeline-diagram { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div>
+    <div class="header-title">🧠 VR身心脑协同训练系统</div>
+    <div class="header-subtitle">AI原始数据 → 运动指导 智能管道演示</div>
+  </div>
+  <div class="header-spacer"></div>
+  <div class="pipeline-minimap" id="minimap">
+    <div class="minimap-dot l1 active" data-layer="1" title="L1 生理状态评估">1</div>
+    <div class="minimap-line"></div>
+    <div class="minimap-dot l2" data-layer="2" title="L2 心理情绪评估">2</div>
+    <div class="minimap-line"></div>
+    <div class="minimap-dot l3" data-layer="3" title="L3 认知状态评估">3</div>
+    <div class="minimap-line"></div>
+    <div class="minimap-dot l4" data-layer="4" title="L4 综合状态融合">4</div>
+    <div class="minimap-line"></div>
+    <div class="minimap-dot l5" data-layer="5" title="L5 推荐决策引擎">5</div>
+    <div class="minimap-line"></div>
+    <div class="minimap-dot l6" data-layer="6" title="L6 VR适配输出">6</div>
+  </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="app-container">
+
+  <!-- LEFT PANEL -->
+  <aside class="left-panel">
+
+    <!-- Preset -->
+    <div class="panel-card">
+      <h3>📋 预设场景</h3>
+      <div class="preset-row">
+        <select class="preset-select" id="presetSelect">
+          <option value="resting_calm">😌 正常静息状态（默认）</option>
+          <option value="stressed_anxious">😰 紧张焦虑状态</option>
+          <option value="excited_energetic">⚡ 兴奋精力充沛</option>
+          <option value="fatigued_depleted">😵 疲劳透支状态</option>
+          <option value="cognitive_overload">🤯 认知超负荷</option>
+          <option value="high_arousal_positive">🔥 高唤醒正向（最佳训练态）</option>
+          <option value="custom">✏️ 自定义调节</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-primary" id="btnRecalc" style="flex:1;">🔄 重新计算</button>
+        <button class="btn btn-outline" id="btnReset">↺ 重置默认</button>
+      </div>
+    </div>
+
+    <!-- Body data -->
+    <div class="panel-card">
+      <h3><span class="icon-dot body"></span> 身体数据 (Body)</h3>
+      <div id="sliderGroupBody"></div>
+    </div>
+
+    <!-- Mind data -->
+    <div class="panel-card">
+      <h3><span class="icon-dot mind"></span> 心理数据 (Mind)</h3>
+      <div id="sliderGroupMind"></div>
+    </div>
+
+    <!-- Brain data -->
+    <div class="panel-card">
+      <h3><span class="icon-dot brain"></span> 脑数据 (Brain)</h3>
+      <div id="sliderGroupBrain"></div>
+    </div>
+
+    <!-- Movement data -->
+    <div class="panel-card">
+      <h3><span class="icon-dot move"></span> 运动数据 (Movement)</h3>
+      <div id="sliderGroupMove"></div>
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="right-panel" id="rightPanel">
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="tab-browse">🔍 逐层浏览</button>
+      <button class="tab-btn" data-tab="tab-overview">🗺️ 管道概览</button>
+      <button class="tab-btn" data-tab="tab-table">📊 数据表</button>
+    </div>
+
+    <!-- Tab 1: Layer-by-layer -->
+    <div class="tab-content active" id="tab-browse">
+      <!-- Layer 1 -->
+      <div class="layer-card open" id="cardL1">
+        <div class="layer-card-header" data-layer="1">
+          <div class="layer-badge l1">L1</div>
+          <div class="layer-title">生理状态评估</div>
+          <div class="layer-summary" id="summaryL1"></div>
+          <div class="layer-chevron">▼</div>
+        </div>
+        <div class="layer-card-body" id="bodyL1"></div>
+      </div>
+
+      <!-- Layer 2 -->
+      <div class="layer-card open" id="cardL2">
+        <div class="layer-card-header" data-layer="2">
+          <div class="layer-badge l2">L2</div>
+          <div class="layer-title">心理 / 情绪状态评估</div>
+          <div class="layer-summary" id="summaryL2"></div>
+          <div class="layer-chevron">▼</div>
+        </div>
+        <div class="layer-card-body" id="bodyL2"></div>
+      </div>
+
+      <!-- Layer 3 -->
+      <div class="layer-card open" id="cardL3">
+        <div class="layer-card-header" data-layer="3">
+          <div class="layer-badge l3">L3</div>
+          <div class="layer-title">认知状态评估</div>
+          <div class="layer-summary" id="summaryL3"></div>
+          <div class="layer-chevron">▼</div>
+        </div>
+        <div class="layer-card-body" id="bodyL3"></div>
+      </div>
+
+      <!-- Layer 4 -->
+      <div class="layer-card open" id="cardL4">
+        <div class="layer-card-header" data-layer="4">
+          <div class="layer-badge l4">L4</div>
+          <div class="layer-title">综合状态融合</div>
+          <div class="layer-summary" id="summaryL4"></div>
+          <div class="layer-chevron">▼</div>
+        </div>
+        <div class="layer-card-body" id="bodyL4"></div>
+      </div>
+
+      <!-- Layer 5 -->
+      <div class="layer-card open" id="cardL5">
+        <div class="layer-card-header" data-layer="5">
+          <div class="layer-badge l5">L5</div>
+          <div class="layer-title">推荐决策引擎</div>
+          <div class="layer-summary" id="summaryL5"></div>
+          <div class="layer-chevron">▼</div>
+        </div>
+        <div class="layer-card-body" id="bodyL5"></div>
+      </div>
+
+      <!-- Layer 6 -->
+      <div class="layer-card open" id="cardL6">
+        <div class="layer-card-header" data-layer="6">
+          <div class="layer-badge l6">L6</div>
+          <div class="layer-title">VR 适配输出</div>
+          <div class="layer-summary" id="summaryL6"></div>
+          <div class="layer-chevron">▼</div>
+        </div>
+        <div class="layer-card-body" id="bodyL6"></div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Pipeline overview -->
+    <div class="tab-content" id="tab-overview">
+      <div class="panel-card" style="text-align:center;padding:20px;">
+        <h3 style="margin-bottom:16px;">🗺️ 6层AI分析管道 — 数据流全景</h3>
+        <div class="pipeline-diagram" id="pipelineDiagram"></div>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:12px;">
+          💡 点击任意节点跳转到对应层级查看详情
+        </p>
+      </div>
+    </div>
+
+    <!-- Tab 3: Data table -->
+    <div class="tab-content" id="tab-table">
+      <div class="panel-card" style="padding:14px;">
+        <h3 style="margin-bottom:12px;">📊 全管道计算数据</h3>
+        <div class="data-table-wrap">
+          <table class="data-table" id="dataTable"></table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== FOOTER RESULT BAR ===== -->
+<footer class="footer-bar" id="footerBar">
+  <div class="rec-badge badge-breathing" id="footerBadge">呼吸训练</div>
+  <div class="footer-metrics">
+    <div class="footer-metric">强度: <strong id="footerIntensity">25%</strong></div>
+    <div class="footer-metric">时长: <strong id="footerDuration">8分钟</strong></div>
+    <div class="footer-metric">场景: <strong id="footerScene">森林正念</strong></div>
+  </div>
+  <div class="footer-coach-text">
+    💬 <span class="coach-quote" id="footerCoach">吸气...感受腹部的扩张，让紧张随气息流走。</span>
+  </div>
+  <div class="footer-confidence">置信度: <strong id="footerConf">85%</strong></div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+const SLIDER_DEFS = [
+  // Body (6)
+  { id:'hr', group:'body', label:'实时心率 (HR)', unit:'bpm', min:40, max:200, step:1, defaultVal:72,
+    desc:'当前心率值，反映整体生理负荷水平', css:'slider-body' },
+  { id:'rmssd', group:'body', label:'RMSSD', unit:'ms', min:5, max:100, step:1, defaultVal:42,
+    desc:'心率变异性副交感神经活性指标，越高越放松', css:'slider-body' },
+  { id:'lfhf', group:'body', label:'LF/HF 比值', unit:'ratio', min:0.3, max:8.0, step:0.1, defaultVal:1.8,
+    desc:'交感/副交感平衡比，>2.5表示压力主导', css:'slider-body' },
+  { id:'gsr_tonic', group:'body', label:'皮肤电导基础水平 (GSR)', unit:'μS', min:0.5, max:20, step:0.1, defaultVal:2.5,
+    desc:'皮肤电活动基础水平，反映交感神经激活程度', css:'slider-body' },
+  { id:'skin_temp', group:'body', label:'皮肤温度', unit:'°C', min:30, max:38, step:0.1, defaultVal:35.2,
+    desc:'外周皮肤温度，指示循环和代谢状态', css:'slider-body' },
+  { id:'sample_entropy', group:'body', label:'心率样本熵', unit:'n/a', min:0.3, max:2.5, step:0.01, defaultVal:1.6,
+    desc:'HRV复杂度指标，越高表示自主神经调节越灵活', css:'slider-body' },
+
+  // Mind (4)
+  { id:'alpha_asymmetry', group:'mind', label:'Alpha不对称指数', unit:'idx', min:-0.4, max:0.4, step:0.01, defaultVal:-0.05,
+    desc:'前额叶Alpha不对称：负值→正向情绪趋近，正值→负向情绪回避', css:'slider-mind' },
+  { id:'theta_beta_ratio', group:'mind', label:'Theta/Beta 比值', unit:'ratio', min:1.0, max:4.0, step:0.1, defaultVal:1.6,
+    desc:'注意力指标：<1.5专注，>3.5严重分心/疲劳', css:'slider-mind' },
+  { id:'alpha_power', group:'mind', label:'Alpha功率 (相对基线%)', unit:'%', min:40, max:250, step:1, defaultVal:130,
+    desc:'α波功率相对于安静睁眼基线的百分比，反映放松深度', css:'slider-mind' },
+  { id:'beta_power', group:'mind', label:'Beta功率 (相对基线%)', unit:'%', min:30, max:200, step:1, defaultVal:80,
+    desc:'β波功率相对于基线的百分比，反映活跃思维/焦虑水平', css:'slider-mind' },
+
+  // Brain (3)
+  { id:'reaction_time', group:'brain', label:'简单反应时', unit:'ms', min:180, max:500, step:1, defaultVal:260,
+    desc:'信息处理速度的经典测量指标', css:'slider-brain' },
+  { id:'stroop_interference', group:'brain', label:'Stroop干扰效应', unit:'ms', min:20, max:200, step:1, defaultVal:75,
+    desc:'Stroop不一致条件减一致条件反应时，反映执行控制能力', css:'slider-brain' },
+  { id:'nback_dprime', group:'brain', label:'N-back d\'敏感度', unit:"d'", min:0.3, max:3.5, step:0.01, defaultVal:2.1,
+    desc:'工作记忆容量的信号检测论指标', css:'slider-brain' },
+
+  // Movement (2)
+  { id:'movement_quality', group:'move', label:'运动质量评分', unit:'0-100', min:10, max:100, step:1, defaultVal:72,
+    desc:'基于加速度熵、头部平滑度、关节轨迹的运动综合评分', css:'slider-move' },
+  { id:'movement_symmetry', group:'move', label:'运动对称性', unit:'%', min:50, max:100, step:1, defaultVal:90,
+    desc:'左右侧肢体运动幅度对称比，100%为完全对称', css:'slider-move' },
+];
+
+const PRESETS = {
+  resting_calm: {
+    label:'😌 正常静息状态', hr:72, rmssd:42, lfhf:1.8, gsr_tonic:2.5, skin_temp:35.2,
+    sample_entropy:1.6, alpha_asymmetry:-0.05, theta_beta_ratio:1.6, alpha_power:130,
+    beta_power:80, reaction_time:260, stroop_interference:75, nback_dprime:2.1,
+    movement_quality:72, movement_symmetry:90
+  },
+  stressed_anxious: {
+    label:'😰 紧张焦虑状态', hr:95, rmssd:18, lfhf:4.5, gsr_tonic:8.0, skin_temp:33.8,
+    sample_entropy:0.9, alpha_asymmetry:0.25, theta_beta_ratio:2.8, alpha_power:70,
+    beta_power:160, reaction_time:310, stroop_interference:110, nback_dprime:1.4,
+    movement_quality:55, movement_symmetry:78
+  },
+  excited_energetic: {
+    label:'⚡ 兴奋精力充沛', hr:110, rmssd:35, lfhf:3.0, gsr_tonic:6.0, skin_temp:36.2,
+    sample_entropy:1.8, alpha_asymmetry:-0.20, theta_beta_ratio:1.3, alpha_power:100,
+    beta_power:120, reaction_time:230, stroop_interference:55, nback_dprime:2.5,
+    movement_quality:85, movement_symmetry:94
+  },
+  fatigued_depleted: {
+    label:'😵 疲劳透支状态', hr:65, rmssd:25, lfhf:1.2, gsr_tonic:3.0, skin_temp:34.5,
+    sample_entropy:0.7, alpha_asymmetry:0.15, theta_beta_ratio:3.2, alpha_power:160,
+    beta_power:55, reaction_time:380, stroop_interference:140, nback_dprime:1.0,
+    movement_quality:40, movement_symmetry:72
+  },
+  cognitive_overload: {
+    label:'🤯 认知超负荷', hr:78, rmssd:38, lfhf:1.9, gsr_tonic:3.5, skin_temp:35.0,
+    sample_entropy:1.4, alpha_asymmetry:-0.02, theta_beta_ratio:2.2, alpha_power:95,
+    beta_power:140, reaction_time:380, stroop_interference:150, nback_dprime:0.8,
+    movement_quality:60, movement_symmetry:85
+  },
+  high_arousal_positive: {
+    label:'🔥 高唤醒正向（最佳训练态）', hr:105, rmssd:40, lfhf:2.8, gsr_tonic:5.5, skin_temp:36.0,
+    sample_entropy:1.9, alpha_asymmetry:-0.28, theta_beta_ratio:1.2, alpha_power:120,
+    beta_power:95, reaction_time:220, stroop_interference:45, nback_dprime:2.9,
+    movement_quality:90, movement_symmetry:96
+  },
+};
+
+const EXERCISE_TYPES_ZH = {
+  rest: '静息休息',
+  breathing: '呼吸训练',
+  light_movement: '轻度运动',
+  moderate_aerobic: '中度有氧',
+  high_intensity: '高强度训练',
+  recovery: '恢复活动',
+  stop: '⚠️ 立即停止',
+};
+
+const EXERCISE_COLORS = {
+  rest: '#94a3b8',
+  breathing: '#0ea5a5',
+  light_movement: '#10b981',
+  moderate_aerobic: '#f59e0b',
+  high_intensity: '#ef4444',
+  recovery: '#6366f1',
+  stop: '#000000',
+};
+
+const SCENE_MAP = {
+  rest: '森林禅园 — 自然白噪音（溪流/鸟鸣）',
+  breathing: '森林正念湖畔 — 432Hz Solfeggio + 自然声',
+  light_movement: '山湖太极平台 — 528Hz + 自然环境音+轻柔引导',
+  moderate_aerobic: '海滩日落小径 — 节奏渐进音频 120-135BPM',
+  high_intensity: '抽象霓虹空间 — 高能量电子 140-160BPM',
+  recovery: '海滩日落恢复 — 432Hz + 日落渐变环境音',
+  stop: '—',
+};
+
+const COACH_PROMPTS = {
+  rest: ['闭上眼睛，让身体完全沉入支撑面', '感受每一次呼吸的自然流动', '不需要做任何事，此刻只属于你自己'],
+  breathing: ['吸气...感受腹部的扩张 (4秒)', '屏息...让氧气充分交换 (4秒)', '缓慢呼气...让紧张随气息流走 (4秒)', '暂停...感受这一刻的平静 (4秒)'],
+  light_movement: ['轻轻活动关节，唤醒身体每一个部位', '保持呼吸均匀，动作缓慢而流畅', '关注身体的感受，不强求幅度'],
+  moderate_aerobic: ['保持节奏！呼吸均匀是关键', '心率正在理想区间，继续保持', '你做得很好，感受身体逐渐发热'],
+  high_intensity: ['保持节奏！注意呼吸不要乱', '你做得很好，继续保持这个强度', '注意力集中，目标就在前方', '最后阶段，冲刺！'],
+  recovery: ['慢慢降低运动幅度...', '深呼吸，让心率平稳回落', '感受肌肉的放松，汗水的温度', '你的身体正在恢复，请耐心等待'],
+  stop: ['⚠️ 立即停止运动！心率超过安全上限', '请坐下或躺下，保持深呼吸', '如感不适请寻求帮助'],
+};
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerpMap(v, inLo, inHi, outLo, outHi) {
+  const t = clamp((v - inLo) / (inHi - inLo), 0, 1);
+  return outLo + t * (outHi - outLo);
+}
+function r2(v) { return Math.round(v * 100) / 100; }
+function r0(v) { return Math.round(v); }
+function getScoreClass(v) {
+  if (v >= 75) return 'good';
+  if (v >= 50) return 'info';
+  if (v >= 30) return 'warn';
+  return 'danger';
+}
+function getScoreColor(v) {
+  if (v >= 75) return 'var(--color-good)';
+  if (v >= 50) return 'var(--color-info)';
+  if (v >= 30) return 'var(--color-warn)';
+  return 'var(--color-danger)';
+}
+
+// ============================================================
+// SVG GAUGE RENDERER
+// ============================================================
+
+function renderGaugeSVG(value, size = 90, strokeWidth = 7) {
+  const r = (size / 2) - strokeWidth - 2;
+  const cx = size / 2, cy = size / 2;
+  const circum = 2 * Math.PI * r;
+  const dashLen = (clamp(value, 0, 100) / 100) * circum;
+  const color = getScoreColor(value);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="${strokeWidth}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"
+      stroke-dasharray="${dashLen} ${circum - dashLen}" stroke-linecap="round"
+      transform="rotate(-90 ${cx} ${cy})"
+      style="transition: stroke-dasharray 0.5s ease, stroke 0.5s ease;"/>
+  </svg>`;
+}
+
+// ============================================================
+// LAYER 1: PHYSIOLOGICAL STATE ASSESSMENT
+// ============================================================
+
+function computeLayer1(inputs) {
+  const { hr, rmssd, lfhf, gsr_tonic, skin_temp, sample_entropy, movement_quality, movement_symmetry } = inputs;
+  const hrMax = 200; // assume age ~20, 220-20
+  const hrPct = hr / hrMax;
+
+  // 1A: Cardiac Load
+  let cardiacLoad;
+  if (hrPct < 0.40) cardiacLoad = lerpMap(hrPct, 0, 0.40, 0, 25);
+  else if (hrPct < 0.60) cardiacLoad = lerpMap(hrPct, 0.40, 0.60, 25, 50);
+  else if (hrPct < 0.75) cardiacLoad = lerpMap(hrPct, 0.60, 0.75, 50, 70);
+  else if (hrPct < 0.85) cardiacLoad = lerpMap(hrPct, 0.75, 0.85, 70, 85);
+  else cardiacLoad = lerpMap(hrPct, 0.85, 1.0, 85, 100);
+  // Cross-check: high HR but low LF/HF reduces load estimate
+  if (hrPct > 0.60 && lfhf < 1.0) cardiacLoad *= 0.90;
+  cardiacLoad = r0(clamp(cardiacLoad, 0, 100));
+
+  // 1B: Autonomic Balance (higher = more sympathetic/stressed)
+  const rmssdScore = clamp(100 - (rmssd / 80 * 100), 0, 100);
+  const gsrScore = clamp(gsr_tonic / 12 * 100, 0, 100);
+  const lfhfScore = clamp((lfhf - 0.3) / 5.7 * 100, 0, 100);
+  const entropyScore = clamp((1.0 - (sample_entropy - 0.3) / 2.2) * 100, 0, 100); // inverted: low entropy = rigid
+  const baevskySI = clamp((lfhf * 100) / Math.max(rmssd, 1) * 2, 0, 100); // simplified Baevsky Stress Index
+  const autonomicBalance = r0(clamp(
+    0.30 * rmssdScore + 0.25 * gsrScore + 0.20 * lfhfScore + 0.15 * entropyScore + 0.10 * baevskySI, 0, 100));
+
+  // 1C: Circulatory-Metabolic
+  const circulatory = r0(clamp(lerpMap(skin_temp, 33, 38, 20, 100), 0, 100));
+
+  // 1D: Movement Quality
+  const movQualityAdj = r0(clamp(movement_quality * (movement_symmetry / 100), 0, 100));
+
+  return {
+    cardiacLoad, autonomicBalance, circulatory, movQualityAdj,
+    hrMax, hrPct: r2(hrPct), rmssdScore: r0(rmssdScore), gsrScore: r0(gsrScore),
+    lfhfScore: r0(lfhfScore), entropyScore: r0(entropyScore), baevskySI: r0(baevskySI),
+    // Inverted scores for display (higher = better)
+    cardiacLoadGood: r0(100 - cardiacLoad),
+    autonomicGood: r0(100 - autonomicBalance),
+  };
+}
+
+function renderLayer1(l1) {
+  const summaryHtml = `
+    <span class="score-chip ${getScoreClass(l1.cardiacLoadGood)}">心脏负荷: ${l1.cardiacLoad}分</span>
+    <span class="score-chip ${getScoreClass(l1.autonomicGood)}">自主神经平衡: ${l1.autonomicBalance}分</span>
+    <span class="score-chip ${getScoreClass(l1.circulatory)}">循环代谢: ${l1.circulatory}分</span>
+    <span class="score-chip ${getScoreClass(l1.movQualityAdj)}">运动质量: ${l1.movQualityAdj}分</span>`;
+  document.getElementById('summaryL1').innerHTML = summaryHtml;
+
+  const hrZoneLabel = l1.hrPct < 0.50 ? '休息区' : l1.hrPct < 0.60 ? '热身区' : l1.hrPct < 0.70 ? '脂肪燃烧区' :
+    l1.hrPct < 0.80 ? '有氧区' : l1.hrPct < 0.90 ? '无氧区' : '⚠️ 极限区';
+
+  const bodyHtml = `
+    <div class="gauge-grid">
+      <div class="gauge-item">
+        <div class="gauge-label">🏋️ 心脏负荷</div>
+        ${renderGaugeSVG(l1.cardiacLoadGood, 80)}
+        <div class="gauge-value ${getScoreClass(l1.cardiacLoadGood)}">${l1.cardiacLoad} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">${hrZoneLabel} · HRmax ${l1.hrMax}bpm</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">⚖️ 自主神经平衡</div>
+        ${renderGaugeSVG(l1.autonomicGood, 80)}
+        <div class="gauge-value ${getScoreClass(l1.autonomicGood)}">${l1.autonomicBalance} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">${l1.autonomicBalance > 60 ? '交感主导' : l1.autonomicBalance < 30 ? '副交感主导' : '均衡'}</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🩸 循环代谢</div>
+        ${renderGaugeSVG(l1.circulatory, 80)}
+        <div class="gauge-value ${getScoreClass(l1.circulatory)}">${l1.circulatory} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">皮温 ${inputs().skin_temp}°C</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🏃 运动质量</div>
+        ${renderGaugeSVG(l1.movQualityAdj, 80)}
+        <div class="gauge-value ${getScoreClass(l1.movQualityAdj)}">${l1.movQualityAdj} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">对称性 ${inputs().movement_symmetry}%</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>📐 评分分解</h4>
+      <div class="detail-row"><span class="key">HR %HRmax</span><span class="val">${r2(l1.hrPct * 100)}% → ${hrZoneLabel}</span></div>
+      <div class="detail-row"><span class="key">RMSSD贡献 (逆)</span><span class="val">${l1.rmssdScore} (权0.30)</span></div>
+      <div class="detail-row"><span class="key">GSR贡献</span><span class="val">${l1.gsrScore} (权0.25)</span></div>
+      <div class="detail-row"><span class="key">LF/HF贡献</span><span class="val">${l1.lfhfScore} (权0.20)</span></div>
+      <div class="detail-row"><span class="key">熵值贡献 (逆)</span><span class="val">${l1.entropyScore} (权0.15)</span></div>
+      <div class="detail-row"><span class="key">简化Baevsky压力指数</span><span class="val">${l1.baevskySI} (权0.10)</span></div>
+    </div>`;
+  document.getElementById('bodyL1').innerHTML = bodyHtml;
+}
+
+// ============================================================
+// LAYER 2: PSYCHOLOGICAL / EMOTIONAL ASSESSMENT
+// ============================================================
+
+function computeLayer2(inputs, l1) {
+  const { alpha_asymmetry, theta_beta_ratio, alpha_power, beta_power, gsr_tonic, rmssd, lfhf } = inputs;
+
+  // 2A: Valence (-1 to +1, negative alpha_asymmetry = positive valence)
+  const valence = clamp(-(alpha_asymmetry / 0.4), -1, 1);
+
+  // 2B: Arousal (0 to 1)
+  const gsrArousal = clamp(gsr_tonic / 15, 0, 1);
+  const lfhfArousal = clamp((lfhf - 0.3) / 6.7, 0, 1);
+  const betaArousal = clamp(beta_power / 180, 0, 1);
+  const arousal = clamp(0.40 * gsrArousal + 0.30 * lfhfArousal + 0.30 * betaArousal, 0, 1);
+
+  // Quadrant
+  let quadrant, quadrantZH, quadrantDesc;
+  if (valence >= 0 && arousal >= 0.5) {
+    quadrant = 'HA-PV'; quadrantZH = '高唤醒·正效价 (兴奋)'; quadrantDesc = '精力充沛、动机强烈，适合中高强度运动';
+  } else if (valence < 0 && arousal >= 0.5) {
+    quadrant = 'HA-NV'; quadrantZH = '高唤醒·负效价 (紧张)'; quadrantDesc = '焦虑紧张、交感神经过度激活，优先减压放松';
+  } else if (valence < 0 && arousal < 0.5) {
+    quadrant = 'LA-NV'; quadrantZH = '低唤醒·负效价 (疲劳/低落)'; quadrantDesc = '身心俱疲、动力不足，需温和激活';
+  } else {
+    quadrant = 'LA-PV'; quadrantZH = '低唤醒·正效价 (放松/满足)'; quadrantDesc = '平静满足、身心协调，适合维持性轻度活动';
+  }
+
+  // 2C: Attention (0-100, lower TBR = better attention)
+  const tbr = theta_beta_ratio;
+  let attention;
+  if (tbr <= 1.5) attention = lerpMap(tbr, 1.0, 1.5, 90, 65);
+  else if (tbr <= 2.5) attention = lerpMap(tbr, 1.5, 2.5, 65, 40);
+  else if (tbr <= 3.5) attention = lerpMap(tbr, 2.5, 3.5, 40, 20);
+  else attention = lerpMap(tbr, 3.5, 4.0, 20, 5);
+  attention = r0(clamp(attention, 0, 100));
+
+  // 2D: Relaxation Depth (0-100)
+  const alphaRelax = clamp((alpha_power - 60) / 180 * 100, 0, 100);
+  const rmssdRelax = clamp(rmssd / 70 * 100, 0, 100);
+  const lfhfRelax = 100 - clamp(lfhf / 5 * 100, 0, 100);
+  const relaxation = r0(clamp(0.50 * alphaRelax + 0.30 * rmssdRelax + 0.20 * lfhfRelax, 0, 100));
+
+  return {
+    valence: r2(valence), arousal: r2(arousal), quadrant, quadrantZH, quadrantDesc,
+    attention, relaxation,
+    alphaRelax: r0(alphaRelax), rmssdRelax: r0(rmssdRelax), lfhfRelax: r0(lfhfRelax),
+    gsrArousal: r2(gsrArousal), lfhfArousal: r2(lfhfArousal), betaArousal: r2(betaArousal),
+  };
+}
+
+function renderLayer2(l2) {
+  const summaryHtml = `
+    <span class="score-chip ${l2.quadrant === 'HA-PV' ? 'good' : l2.quadrant === 'LA-PV' ? 'good' : l2.quadrant === 'HA-NV' ? 'danger' : 'warn'}">${l2.quadrantZH}</span>
+    <span class="score-chip ${getScoreClass(l2.attention)}">注意力: ${l2.attention}分</span>
+    <span class="score-chip ${getScoreClass(l2.relaxation)}">放松深度: ${l2.relaxation}分</span>`;
+  document.getElementById('summaryL2').innerHTML = summaryHtml;
+
+  // Circumplex dot position
+  const dotLeft = ((l2.valence + 1) / 2) * 100; // 0-100%
+  const dotTop = (1 - l2.arousal) * 100; // 0-100% (invert Y because high arousal = top)
+
+  const bodyHtml = `
+    <div class="circumplex-container">
+      <div class="circumplex-box">
+        <div class="circumplex-quad cq-tl">😰 紧张<br>HA-NV</div>
+        <div class="circumplex-quad cq-tr">⚡ 兴奋<br>HA-PV</div>
+        <div class="circumplex-quad cq-bl">😵 疲劳<br>LA-NV</div>
+        <div class="circumplex-quad cq-br">😌 放松<br>LA-PV</div>
+        <div class="circumplex-axes-v"></div>
+        <div class="circumplex-axes-h"></div>
+        <div class="circumplex-axis-label cal-top">高唤醒</div>
+        <div class="circumplex-axis-label cal-bottom">低唤醒</div>
+        <div class="circumplex-axis-label cal-left">负效价</div>
+        <div class="circumplex-axis-label cal-right">正效价</div>
+        <div class="circumplex-dot" style="left:${dotLeft}%;top:${dotTop}%;"></div>
+      </div>
+      <div class="emotion-info">
+        <div class="quadrant-name" style="color:${l2.quadrant === 'HA-PV' ? '#10b981' : l2.quadrant === 'LA-PV' ? '#f59e0b' : l2.quadrant === 'HA-NV' ? '#ef4444' : '#6366f1'}">
+          ${l2.quadrantZH}
+        </div>
+        <div class="quadrant-desc">${l2.quadrantDesc}</div>
+        <div style="margin-top:8px;font-size:0.78rem;">
+          <strong>效价:</strong> ${l2.valence.toFixed(2)} &nbsp;|&nbsp;
+          <strong>唤醒度:</strong> ${l2.arousal.toFixed(2)}
+        </div>
+      </div>
+    </div>
+    <div class="gauge-grid" style="margin-top:12px;">
+      <div class="gauge-item">
+        <div class="gauge-label">🎯 注意力评分</div>
+        ${renderGaugeSVG(l2.attention, 80)}
+        <div class="gauge-value ${getScoreClass(l2.attention)}">${l2.attention} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">Theta/Beta = ${inputs().theta_beta_ratio}</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🧘 放松深度</div>
+        ${renderGaugeSVG(l2.relaxation, 80)}
+        <div class="gauge-value ${getScoreClass(l2.relaxation)}">${l2.relaxation} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">Alpha ${inputs().alpha_power}%基线</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>📐 评分分解</h4>
+      <div class="detail-row"><span class="key">唤醒度—GSR贡献</span><span class="val">${l2.gsrArousal.toFixed(2)} (权0.40)</span></div>
+      <div class="detail-row"><span class="key">唤醒度—LF/HF贡献</span><span class="val">${l2.lfhfArousal.toFixed(2)} (权0.30)</span></div>
+      <div class="detail-row"><span class="key">唤醒度—Beta贡献</span><span class="val">${l2.betaArousal.toFixed(2)} (权0.30)</span></div>
+      <div class="detail-row"><span class="key">放松—Alpha功率贡献</span><span class="val">${l2.alphaRelax} (权0.50)</span></div>
+      <div class="detail-row"><span class="key">放松—RMSSD贡献</span><span class="val">${l2.rmssdRelax} (权0.30)</span></div>
+      <div class="detail-row"><span class="key">放松—LF/HF贡献 (逆)</span><span class="val">${l2.lfhfRelax} (权0.20)</span></div>
+    </div>`;
+  document.getElementById('bodyL2').innerHTML = bodyHtml;
+}
+
+// ============================================================
+// LAYER 3: COGNITIVE STATE ASSESSMENT
+// ============================================================
+
+function computeLayer3(inputs) {
+  const { reaction_time, stroop_interference, nback_dprime } = inputs;
+  const rt = reaction_time, si = stroop_interference, dp = nback_dprime;
+
+  // 3A: Processing Speed
+  let processingSpeed;
+  if (rt <= 220) processingSpeed = lerpMap(rt, 180, 220, 100, 90);
+  else if (rt <= 280) processingSpeed = lerpMap(rt, 220, 280, 90, 65);
+  else if (rt <= 350) processingSpeed = lerpMap(rt, 280, 350, 65, 40);
+  else processingSpeed = lerpMap(rt, 350, 500, 40, 10);
+  processingSpeed = r0(clamp(processingSpeed, 0, 100));
+
+  // 3B: Executive Function
+  let execFunc;
+  if (si <= 40) execFunc = lerpMap(si, 20, 40, 100, 85);
+  else if (si <= 80) execFunc = lerpMap(si, 40, 80, 85, 65);
+  else if (si <= 120) execFunc = lerpMap(si, 80, 120, 65, 40);
+  else execFunc = lerpMap(si, 120, 200, 40, 10);
+  execFunc = r0(clamp(execFunc, 0, 100));
+
+  // 3C: Working Memory
+  let workMem;
+  if (dp >= 2.5) workMem = lerpMap(dp, 2.5, 3.5, 85, 100);
+  else if (dp >= 1.5) workMem = lerpMap(dp, 1.5, 2.5, 55, 85);
+  else if (dp >= 0.8) workMem = lerpMap(dp, 0.8, 1.5, 25, 55);
+  else workMem = lerpMap(dp, 0.3, 0.8, 5, 25);
+  workMem = r0(clamp(workMem, 0, 100));
+
+  const cognitiveScore = r0(0.33 * processingSpeed + 0.33 * execFunc + 0.34 * workMem);
+
+  return { processingSpeed, execFunc, workMem, cognitiveScore };
+}
+
+function renderLayer3(l3) {
+  const summaryHtml = `
+    <span class="score-chip ${getScoreClass(l3.processingSpeed)}">处理速度: ${l3.processingSpeed}分</span>
+    <span class="score-chip ${getScoreClass(l3.execFunc)}">执行功能: ${l3.execFunc}分</span>
+    <span class="score-chip ${getScoreClass(l3.workMem)}">工作记忆: ${l3.workMem}分</span>
+    <span class="score-chip ${getScoreClass(l3.cognitiveScore)}">综合认知: ${l3.cognitiveScore}分</span>`;
+  document.getElementById('summaryL3').innerHTML = summaryHtml;
+
+  const inp = inputs();
+  const bodyHtml = `
+    <div class="gauge-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="gauge-item">
+        <div class="gauge-label">⚡ 处理速度</div>
+        ${renderGaugeSVG(l3.processingSpeed, 80)}
+        <div class="gauge-value ${getScoreClass(l3.processingSpeed)}">${l3.processingSpeed} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">反应时 ${inp.reaction_time}ms</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🎯 执行功能</div>
+        ${renderGaugeSVG(l3.execFunc, 80)}
+        <div class="gauge-value ${getScoreClass(l3.execFunc)}">${l3.execFunc} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">Stroop干扰 ${inp.stroop_interference}ms</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🧩 工作记忆</div>
+        ${renderGaugeSVG(l3.workMem, 80)}
+        <div class="gauge-value ${getScoreClass(l3.workMem)}">${l3.workMem} 分</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">N-back d'=${inp.nback_dprime}</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>📐 综合认知评分 = 0.33×处理速度 + 0.33×执行功能 + 0.34×工作记忆</h4>
+      <div class="detail-row"><span class="key">处理速度</span><span class="val">${l3.processingSpeed} × 0.33 = ${r0(l3.processingSpeed * 0.33)}</span></div>
+      <div class="detail-row"><span class="key">执行功能</span><span class="val">${l3.execFunc} × 0.33 = ${r0(l3.execFunc * 0.33)}</span></div>
+      <div class="detail-row"><span class="key">工作记忆</span><span class="val">${l3.workMem} × 0.34 = ${r0(l3.workMem * 0.34)}</span></div>
+      <div class="detail-row" style="font-weight:700;"><span class="key">综合认知评分</span><span class="val">${l3.cognitiveScore} 分</span></div>
+    </div>`;
+  document.getElementById('bodyL3').innerHTML = bodyHtml;
+}
+
+// ============================================================
+// LAYER 4: INTEGRATED STATE FUSION
+// ============================================================
+
+function computeLayer4(l1, l2, l3, inputs) {
+  const { rmssd, gsr_tonic, sample_entropy } = inputs;
+
+  // Body subsystem score (higher=better)
+  const bodyScore = r0(clamp(
+    0.30 * l1.cardiacLoadGood + 0.30 * l1.autonomicGood + 0.20 * l1.circulatory + 0.20 * l1.movQualityAdj, 0, 100));
+
+  // Mind subsystem score
+  const mindValenceScore = l2.valence < 0 ? 100 * (1 + l2.valence) : 100;
+  const mindScore = r0(clamp(0.35 * l2.attention + 0.35 * l2.relaxation + 0.30 * mindValenceScore, 0, 100));
+
+  // Brain subsystem score
+  const brainScore = l3.cognitiveScore;
+
+  // Body-Mind coupling
+  const bodyMindGap = Math.abs(l1.autonomicGood - l2.relaxation);
+  let bodyMindCoupling, bmcClass;
+  if (bodyMindGap < 15) { bodyMindCoupling = '身心同步 ✓'; bmcClass = 'good'; }
+  else if (l2.relaxation > l1.autonomicGood) { bodyMindCoupling = '心理放松 > 身体放松 (潜在解耦)'; bmcClass = 'warn'; }
+  else { bodyMindCoupling = '身体放松 > 心理放松 (潜在解耦)'; bmcClass = 'warn'; }
+
+  // Mind-Brain coupling
+  const mindBrainGap = Math.abs(mindScore - brainScore);
+  let mindBrainCoupling, mbcClass;
+  if (mindBrainGap < 15) { mindBrainCoupling = '心脑耦合良好 ✓'; mbcClass = 'good'; }
+  else { mindBrainCoupling = '心脑状态不一致 ⚠'; mbcClass = 'warn'; }
+
+  // Recovery Readiness
+  const rmssdRecovery = clamp(lerpMap(rmssd, 15, 55, 10, 100), 0, 100);
+  const gsrRecovery = clamp(100 - (gsr_tonic / 10 * 100), 0, 100);
+  const entropyRecovery = clamp(lerpMap(sample_entropy, 0.3, 2.5, 5, 100), 0, 100);
+  const recovery = r0(clamp(
+    0.35 * rmssdRecovery + 0.25 * gsrRecovery + 0.25 * entropyRecovery + 0.15 * l2.relaxation, 0, 100));
+
+  // Global state vector summary
+  const globalState = { bodyScore, mindScore, brainScore, recovery };
+
+  return { bodyScore, mindScore, brainScore, bodyMindCoupling, bmcClass, bodyMindGap: r0(bodyMindGap),
+    mindBrainCoupling, mbcClass, mindBrainGap: r0(mindBrainGap), recovery, globalState,
+    rmssdRecovery: r0(rmssdRecovery), gsrRecovery: r0(gsrRecovery), entropyRecovery: r0(entropyRecovery) };
+}
+
+function renderLayer4(l4) {
+  const summaryHtml = `
+    <span class="score-chip ${getScoreClass(l4.bodyScore)}">身体: ${l4.bodyScore}分</span>
+    <span class="score-chip ${getScoreClass(l4.mindScore)}">心理: ${l4.mindScore}分</span>
+    <span class="score-chip ${getScoreClass(l4.brainScore)}">脑: ${l4.brainScore}分</span>
+    <span class="score-chip ${getScoreClass(l4.recovery)}">恢复准备度: ${l4.recovery}分</span>`;
+  document.getElementById('summaryL4').innerHTML = summaryHtml;
+
+  const bodyHtml = `
+    <div class="gauge-grid" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="gauge-item">
+        <div class="gauge-label">💪 身体子系统</div>
+        ${renderGaugeSVG(l4.bodyScore, 75)}
+        <div class="gauge-value ${getScoreClass(l4.bodyScore)}">${l4.bodyScore} 分</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🧠 心理子系统</div>
+        ${renderGaugeSVG(l4.mindScore, 75)}
+        <div class="gauge-value ${getScoreClass(l4.mindScore)}">${l4.mindScore} 分</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🔬 脑子系统</div>
+        ${renderGaugeSVG(l4.brainScore, 75)}
+        <div class="gauge-value ${getScoreClass(l4.brainScore)}">${l4.brainScore} 分</div>
+      </div>
+      <div class="gauge-item">
+        <div class="gauge-label">🔄 恢复准备度</div>
+        ${renderGaugeSVG(l4.recovery, 75)}
+        <div class="gauge-value ${getScoreClass(l4.recovery)}">${l4.recovery} 分</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>🔗 跨域耦合指标</h4>
+      <div class="detail-row"><span class="key">身心耦合度</span>
+        <span class="val text-${l4.bmcClass}">${l4.bodyMindCoupling} (差距: ${l4.bodyMindGap})</span></div>
+      <div class="detail-row"><span class="key">心脑耦合度</span>
+        <span class="val text-${l4.mbcClass}">${l4.mindBrainCoupling} (差距: ${l4.mindBrainGap})</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>📐 恢复准备度分解</h4>
+      <div class="detail-row"><span class="key">RMSSD贡献</span><span class="val">${l4.rmssdRecovery} (权0.35)</span></div>
+      <div class="detail-row"><span class="key">GSR贡献 (逆)</span><span class="val">${l4.gsrRecovery} (权0.25)</span></div>
+      <div class="detail-row"><span class="key">样本熵贡献</span><span class="val">${l4.entropyRecovery} (权0.25)</span></div>
+      <div class="detail-row"><span class="key">放松深度贡献</span><span class="val">${l4.recovery} (权0.15)</span></div>
+    </div>`;
+  document.getElementById('bodyL4').innerHTML = bodyHtml;
+}
+
+// ============================================================
+// LAYER 5: RECOMMENDATION DECISION ENGINE
+// ============================================================
+
+function computeLayer5(l1, l2, l3, l4, inputs) {
+  const { hr, rmssd } = inputs;
+  const hrMax = 200;
+
+  // STEP 0: Safety gate
+  let safetyTriggered = false;
+  let safetyType = null;
+  let safetyMessage = '';
+
+  if (hr > 0.9 * hrMax) {
+    safetyTriggered = true;
+    safetyType = 'stop';
+    safetyMessage = '⚠️ 心率超过安全上限（90% HRmax），必须立即停止运动！';
+  } else if (rmssd < 15) {
+    safetyTriggered = true;
+    safetyType = 'recovery_only';
+    safetyMessage = '⚠️ RMSSD严重偏低（<15ms），自主神经恢复不足，仅允许恢复活动。';
+  }
+
+  // STEP 1: Initialize candidates
+  let candidates = ['breathing', 'light_movement', 'moderate_aerobic', 'high_intensity', 'recovery', 'rest'];
+
+  // STEP 2: Physiological boundary filtering
+  const filteredOut = [];
+  if (l1.autonomicBalance > 75) {
+    filteredOut.push('high_intensity', 'moderate_aerobic');
+    candidates = candidates.filter(c => !['high_intensity', 'moderate_aerobic'].includes(c));
+  }
+  if (l1.cardiacLoad > 75) {
+    filteredOut.push('high_intensity');
+    candidates = candidates.filter(c => c !== 'high_intensity');
+  }
+  if (l1.circulatory < 30) {
+    filteredOut.push('high_intensity', 'moderate_aerobic');
+    candidates = candidates.filter(c => !['high_intensity', 'moderate_aerobic'].includes(c));
+  }
+
+  // STEP 3: Score each candidate (simplified RF simulation)
+  const scores = {};
+  const scoringDetails = {};
+
+  for (const type of candidates) {
+    let s = 50; // base
+
+    // Match to physiological state
+    if (type === 'rest' || type === 'recovery') {
+      s += (l1.autonomicBalance > 50 ? 30 : 0) + (l1.cardiacLoad > 50 ? 25 : 0);
+    }
+    if (type === 'breathing') {
+      s += (l1.autonomicBalance > 40 ? 20 : 0) + (l2.relaxation < 50 ? 20 : 0);
+    }
+    if (type === 'light_movement') {
+      s += (l1.autonomicBalance < 70 ? 15 : 0) + (l1.movQualityAdj > 40 ? 15 : 0);
+    }
+    if (type === 'moderate_aerobic') {
+      s += (l1.cardiacLoad < 60 ? 15 : 0) + (l1.autonomicBalance < 60 ? 15 : 0) + (l1.movQualityAdj > 50 ? 15 : 0);
+    }
+    if (type === 'high_intensity') {
+      s += (l1.cardiacLoad < 40 ? 20 : 0) + (l1.autonomicBalance < 40 ? 20 : 0) + (l1.movQualityAdj > 60 ? 20 : 0);
+    }
+
+    // Match to psychological state
+    if (l2.quadrant === 'HA-NV') {
+      if (type === 'breathing') s += 35;
+      if (type === 'high_intensity') s -= 30;
+    }
+    if (l2.quadrant === 'HA-PV') {
+      if (type === 'high_intensity') s += 25;
+      if (type === 'moderate_aerobic') s += 20;
+    }
+    if (l2.quadrant === 'LA-NV') {
+      if (type === 'light_movement') s += 25;
+      if (type === 'recovery') s += 20;
+      if (type === 'high_intensity') s -= 25;
+    }
+    if (l2.quadrant === 'LA-PV') {
+      if (type === 'light_movement') s += 15;
+      if (type === 'moderate_aerobic') s += 10;
+    }
+
+    // Match to cognitive state
+    if (l3.cognitiveScore < 40 && ['high_intensity', 'moderate_aerobic'].includes(type)) s -= 20;
+    if (l2.attention < 30 && type === 'high_intensity') s -= 25;
+
+    // Recovery readiness
+    if (l4.recovery < 30) {
+      if (['recovery', 'breathing', 'rest'].includes(type)) s += 20;
+      if (['high_intensity', 'moderate_aerobic'].includes(type)) s -= 20;
+    }
+
+    scores[type] = r0(clamp(s, 0, 100));
+  }
+
+  // If safety triggered, override
+  if (safetyTriggered && safetyType === 'stop') {
+    candidates = ['stop'];
+    scores['stop'] = 100;
+  } else if (safetyTriggered && safetyType === 'recovery_only') {
+    candidates = candidates.filter(c => ['breathing', 'recovery', 'rest'].includes(c));
+    if (candidates.length === 0) candidates = ['recovery'];
+  }
+
+  // Select winner
+  let winner = candidates[0];
+  for (const c of candidates) {
+    if (scores[c] > scores[winner]) winner = c;
+  }
+
+  // Confidence
+  const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+  const confidence = totalScore > 0 ? r0(scores[winner] / totalScore * 100) : 100;
+
+  // STEP 4: Intensity regression
+  let baseIntensity;
+  if (winner === 'rest' || winner === 'stop') baseIntensity = 0;
+  else if (winner === 'breathing') baseIntensity = 20;
+  else if (winner === 'recovery') baseIntensity = 15;
+  else if (winner === 'light_movement') baseIntensity = 35;
+  else if (winner === 'moderate_aerobic') baseIntensity = 60;
+  else if (winner === 'high_intensity') baseIntensity = 80;
+  else baseIntensity = 30;
+
+  // Context modifiers
+  let intensityModifiers = [];
+  if (l2.valence < -0.2) { baseIntensity *= 0.85; intensityModifiers.push('负效价×0.85'); }
+  if (l2.attention < 30) { baseIntensity *= 0.80; intensityModifiers.push('低注意力×0.80'); }
+  if (l3.cognitiveScore < 30) { baseIntensity *= 0.85; intensityModifiers.push('认知疲劳×0.85'); }
+  if (l1.movQualityAdj < 30) { baseIntensity *= 0.70; intensityModifiers.push('运动质量差×0.70'); }
+  if (l2.quadrant === 'HA-PV') { baseIntensity *= 1.15; intensityModifiers.push('兴奋状态×1.15'); }
+  if (l4.recovery < 30) { baseIntensity *= 0.70; intensityModifiers.push('恢复不足×0.70'); }
+
+  const intensity = r0(clamp(baseIntensity, 5, 95));
+
+  // STEP 5: Duration
+  let duration = r0(lerpMap(intensity, 5, 95, 5, 30));
+  if (winner === 'breathing') duration = r0(clamp(duration * 0.5, 3, 15));
+  if (winner === 'high_intensity') duration = r0(clamp(duration * 0.7, 5, 20));
+  if (winner === 'recovery' || winner === 'rest') duration = r0(clamp(duration * 0.7, 3, 15));
+
+  return {
+    candidates, scores, winner, confidence, intensity, duration,
+    safetyTriggered, safetyType, safetyMessage,
+    filteredOut, intensityModifiers,
+    winnerZH: EXERCISE_TYPES_ZH[winner] || winner,
+    scoresSorted: Object.entries(scores).sort((a, b) => b[1] - a[1]),
+  };
+}
+
+function renderLayer5(l5) {
+  // Summary
+  const winnerClass = l5.winner === 'stop' ? 'danger' : l5.winner === 'high_intensity' ? 'warn' : 'good';
+  const summaryHtml = `
+    ${l5.safetyTriggered ? '<span class="score-chip danger">⚠️ 安全门触发</span>' : '<span class="score-chip good">✅ 安全门通过</span>'}
+    <span class="score-chip ${winnerClass}">推荐: ${l5.winnerZH}</span>
+    <span class="score-chip info">强度: ${l5.intensity}%</span>
+    <span class="score-chip neutral">时长: ${l5.duration}分钟</span>
+    <span class="score-chip info">置信度: ${l5.confidence}%</span>`;
+  document.getElementById('summaryL5').innerHTML = summaryHtml;
+
+  let bodyHtml = '';
+
+  // Safety gate
+  if (l5.safetyTriggered) {
+    bodyHtml += `<div class="safety-alert ${l5.safetyType === 'stop' ? 'danger' : 'warn'} show">${l5.safetyMessage}</div>`;
+  }
+
+  // Decision flow
+  bodyHtml += `
+    <div class="detail-section">
+      <h4>🛡️ 步骤0: 安全门检查</h4>
+      <div class="detail-row"><span class="key">HR > 90% HRmax (180bpm)?</span><span class="val ${inputs().hr > 180 ? 'text-danger' : 'text-good'}">${inputs().hr > 180 ? '⚠️ 是 — 触发停止' : '✅ 否'}</span></div>
+      <div class="detail-row"><span class="key">RMSSD < 15ms?</span><span class="val ${inputs().rmssd < 15 ? 'text-danger' : 'text-good'}">${inputs().rmssd < 15 ? '⚠️ 是 — 仅恢复' : '✅ 否'}</span></div>
+    </div>
+    <div class="detail-section">
+      <h4>📋 步骤1: 生理边界过滤</h4>
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">
+        被过滤的类型：${l5.filteredOut.length > 0 ? l5.filteredOut.map(t => EXERCISE_TYPES_ZH[t] || t).join('、') : '无（全部可选）'}</p>
+    </div>
+    <div class="detail-section">
+      <h4>📊 步骤2-3: 综合评分（模拟RF分类器 + 情绪/认知微调）</h4>`;
+
+  // Score bars
+  const winnerColor = EXERCISE_COLORS[l5.winner] || '#64748b';
+  for (const [type, score] of l5.scoresSorted) {
+    const isWinner = type === l5.winner;
+    bodyHtml += `
+      <div class="conf-bar-row">
+        <div class="conf-bar-label">${EXERCISE_TYPES_ZH[type] || type}</div>
+        <div class="conf-bar-track">
+          <div class="conf-bar-fill ${isWinner ? 'conf-bar-winner' : 'conf-bar-other'}"
+            style="width:${score}%;${isWinner ? `background:${winnerColor};` : ''}"></div>
+        </div>
+        <div class="conf-bar-score" style="${isWinner ? `color:${winnerColor};font-weight:800;` : ''}">${score} 分</div>
+      </div>`;
+  }
+
+  bodyHtml += `</div>`;
+
+  // Intensity details
+  bodyHtml += `
+    <div class="detail-section">
+      <h4>📐 步骤4: 强度回归 (SVR × 情境修正)</h4>
+      <div class="detail-row"><span class="key">基础强度</span><span class="val">${l5.intensity}%（修正前）</span></div>`;
+  if (l5.intensityModifiers.length > 0) {
+    for (const mod of l5.intensityModifiers) {
+      bodyHtml += `<div class="detail-row"><span class="key">修正因子</span><span class="val">${mod}</span></div>`;
+    }
+  }
+  bodyHtml += `
+      <div class="detail-row" style="font-weight:700;"><span class="key">最终强度</span><span class="val">${l5.intensity}%</span></div>`;
+
+  // Duration
+  bodyHtml += `
+    </div>
+    <div class="detail-section">
+      <h4>⏱️ 步骤5: 时长决策</h4>
+      <div class="detail-row"><span class="key">建议时长</span><span class="val">${l5.duration} 分钟</span></div>
+    </div>`;
+
+  // Final recommendation highlight
+  bodyHtml += `
+    <div class="rec-highlight">
+      <h4>🎯 AI推荐结果</h4>
+      <div class="rec-type">${l5.winnerZH}</div>
+      <p>强度: ${l5.intensity}% &nbsp;|&nbsp; 时长: ${l5.duration} 分钟 &nbsp;|&nbsp; 置信度: ${l5.confidence}%</p>
+    </div>`;
+
+  document.getElementById('bodyL5').innerHTML = bodyHtml;
+}
+
+// ============================================================
+// LAYER 6: VR ADAPTATION OUTPUT
+// ============================================================
+
+function computeLayer6(l5, l2, l1, l4) {
+  const type = l5.winner;
+  const scene = SCENE_MAP[type] || SCENE_MAP.rest;
+
+  // Audio selection
+  const audioMap = {
+    rest: '自然白噪音 (溪流/鸟鸣)',
+    breathing: '432Hz Solfeggio + 海浪自然声',
+    light_movement: '528Hz + 自然环境音 + 轻柔语音引导',
+    moderate_aerobic: '节奏渐进音频 120-135BPM',
+    high_intensity: '高能量电子 140-160BPM',
+    recovery: '432Hz + 日落渐变环境音',
+    stop: '—',
+  };
+  const audio = audioMap[type] || audioMap.rest;
+
+  // Visual guidance
+  const visualMap = {
+    rest: '环境粒子系统 (Alpha波萤火虫效果)',
+    breathing: '呼吸光环缩放 (4-4-4-4盒式呼吸) + GSR压力水滴指示器',
+    light_movement: '虚拟化身演示 + 关节位置目标球 + 运动轨迹描线',
+    moderate_aerobic: '心率区间彩色环 (绿→黄→橙) + 运动节奏指示器',
+    high_intensity: '目标快速出现 + 连击计数 + HR区间警示灯',
+    recovery: '呼吸环 + 心率下降进度条 + 放松光晕',
+    stop: '—',
+  };
+  const visual = visualMap[type] || visualMap.rest;
+
+  // Coach prompts (pick 2-3 representative ones)
+  const prompts = COACH_PROMPTS[type] || COACH_PROMPTS.rest;
+  const primaryPrompt = prompts[0];
+
+  // Adaptive triggers (show which ones would be active)
+  const triggers = [];
+  const inp = inputs();
+
+  if (inp.rmssd < 20) triggers.push({ condition: 'RMSSD < 20ms', action: '教练提示"放慢节奏，关注呼吸" + HR区间环闪烁', active: true });
+  else triggers.push({ condition: 'RMSSD下降>20%持续2个epoch', action: '教练提示"放慢节奏，关注呼吸" + HR区间环闪烁', active: false });
+
+  if (l2.quadrant === 'HA-NV') triggers.push({ condition: 'Alpha不对称持续负效价>5分钟', action: '自动切换至森林场景 + 音频切换为自然声', active: true });
+  else triggers.push({ condition: 'Alpha不对称持续负效价>5分钟', action: '自动切换至森林场景 + 音频切换为自然声', active: false });
+
+  if (l2.attention < 40) triggers.push({ condition: 'Theta/Beta比突然升高>1.0', action: '简化运动目标 + 增强视觉引导', active: true });
+  else triggers.push({ condition: 'Theta/Beta比突然升高>1.0', action: '简化运动目标 + 增强视觉引导', active: false });
+
+  if (inp.skin_temp > 37) triggers.push({ condition: '皮肤温度斜率>0.5°C/min', action: '虚拟风扇动画 + 补水提示', active: true });
+  else triggers.push({ condition: '皮肤温度斜率>0.5°C/min', action: '虚拟风扇动画 + 补水提示', active: false });
+
+  if (inp.movement_symmetry < 80) triggers.push({ condition: '运动对称性>20%不对称', action: '高亮弱侧 + 引导均衡发力', active: true });
+  else triggers.push({ condition: '运动对称性>20%不对称', action: '高亮弱侧 + 引导均衡发力', active: false });
+
+  return { scene, audio, visual, primaryPrompt, triggers, allPrompts: prompts };
+}
+
+function renderLayer6(l6, l5) {
+  const summaryHtml = `
+    <span class="score-chip info">场景: ${l6.scene.split(' — ')[0]}</span>
+    <span class="score-chip neutral">音频: ${l6.audio.split('+')[0].trim()}</span>
+    <span class="score-chip info">视觉: ${l6.visual.split('+')[0].trim()}</span>`;
+  document.getElementById('summaryL6').innerHTML = summaryHtml;
+
+  let bodyHtml = `
+    <div class="vr-output-grid">
+      <div class="vr-output-item">
+        <div class="vro-label">🏞️ VR场景</div>
+        <div class="vro-value">${l6.scene}</div>
+      </div>
+      <div class="vr-output-item">
+        <div class="vro-label">🎵 背景音频</div>
+        <div class="vro-value">${l6.audio}</div>
+      </div>
+      <div class="vr-output-item">
+        <div class="vro-label">👁️ 视觉引导</div>
+        <div class="vro-value">${l6.visual}</div>
+      </div>
+      <div class="vr-output-item">
+        <div class="vro-label">🎤 教练提示</div>
+        <div class="vro-value">"${l6.primaryPrompt}"</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>📢 所有教练提示语 (运行时循环播放)</h4>`;
+  for (const p of l6.allPrompts) {
+    bodyHtml += `<div class="detail-row"><span class="val" style="font-family:var(--font-family);font-weight:500;">💬 "${p}"</span></div>`;
+  }
+  bodyHtml += `</div>
+    <div class="detail-section">
+      <h4>⚡ 实时自适应触发规则 (运行时监测)</h4>
+      <div class="trigger-list">`;
+  for (const t of l6.triggers) {
+    bodyHtml += `
+        <div class="trigger-item ${t.active ? 'active' : 'inactive'}">
+          <span style="flex-shrink:0;">${t.active ? '🔴' : '⚪'}</span>
+          <span><strong>触发条件:</strong> ${t.condition}<br><strong>响应动作:</strong> ${t.action}</span>
+        </div>`;
+  }
+  bodyHtml += `</div></div>`;
+
+  document.getElementById('bodyL6').innerHTML = bodyHtml;
+}
+
+// ============================================================
+// DATA TABLE RENDERER (Tab 3)
+// ============================================================
+
+function renderDataTable(l1, l2, l3, l4, l5, l6, inputs) {
+  const rows = [
+    ['L1 生理状态评估', '', ''],
+    ['', '心脏负荷评分', `${l1.cardiacLoad} 分`, l1.cardiacLoad],
+    ['', '自主神经平衡评分', `${l1.autonomicBalance} 分`, l1.autonomicBalance],
+    ['', '循环代谢评分', `${l1.circulatory} 分`, l1.circulatory],
+    ['', '运动质量评分', `${l1.movQualityAdj} 分`, l1.movQualityAdj],
+    ['', 'HR %HRmax', `${r2(l1.hrPct * 100)}%`, ''],
+    ['L2 心理/情绪评估', '', ''],
+    ['', '情绪效价', `${l2.valence.toFixed(2)} (-1 ~ +1)`, ''],
+    ['', '情绪唤醒度', `${l2.arousal.toFixed(2)} (0 ~ 1)`, ''],
+    ['', '情绪象限', l2.quadrantZH, ''],
+    ['', '注意力评分', `${l2.attention} 分`, ''],
+    ['', '放松深度评分', `${l2.relaxation} 分`, ''],
+    ['L3 认知状态评估', '', ''],
+    ['', '处理速度', `${l3.processingSpeed} 分 (RT=${inputs.reaction_time}ms)`, ''],
+    ['', '执行功能', `${l3.execFunc} 分 (Stroop=${inputs.stroop_interference}ms)`, ''],
+    ['', '工作记忆', `${l3.workMem} 分 (d'=${inputs.nback_dprime})`, ''],
+    ['', '综合认知评分', `${l3.cognitiveScore} 分`, ''],
+    ['L4 综合状态融合', '', ''],
+    ['', '身体子系统评分', `${l4.bodyScore} 分`, ''],
+    ['', '心理子系统评分', `${l4.mindScore} 分`, ''],
+    ['', '脑子系统评分', `${l4.brainScore} 分`, ''],
+    ['', '身心耦合', `${l4.bodyMindCoupling} (差距:${l4.bodyMindGap})`, ''],
+    ['', '心脑耦合', `${l4.mindBrainCoupling} (差距:${l4.mindBrainGap})`, ''],
+    ['', '恢复准备度', `${l4.recovery} 分`, ''],
+    ['L5 推荐决策引擎', '', ''],
+    ['', '安全门状态', l5.safetyTriggered ? `⚠️ 触发 — ${l5.safetyMessage}` : '✅ 通过', ''],
+    ['', '推荐运动类型', l5.winnerZH, ''],
+    ['', '运动强度', `${l5.intensity}%`, ''],
+    ['', '建议时长', `${l5.duration} 分钟`, ''],
+    ['', 'AI置信度', `${l5.confidence}%`, ''],
+    ['L6 VR适配输出', '', ''],
+    ['', 'VR场景', l6.scene, ''],
+    ['', '背景音频', l6.audio, ''],
+    ['', '视觉引导', l6.visual, ''],
+    ['', '主教练提示', `"${l6.primaryPrompt}"`, ''],
+  ];
+
+  let html = '<thead><tr><th>层级/指标</th><th>名称</th><th>数值</th></tr></thead><tbody>';
+  for (const row of rows) {
+    if (row[1] === '') {
+      html += `<tr class="section-header"><td colspan="3">${row[0]}</td></tr>`;
+    } else {
+      html += `<tr><td></td><td class="td-label">${row[1]}</td><td>${row[2]}</td></tr>`;
+    }
+  }
+  html += '</tbody>';
+  document.getElementById('dataTable').innerHTML = html;
+}
+
+// ============================================================
+// PIPELINE DIAGRAM RENDERER (Tab 2)
+// ============================================================
+
+function renderPipelineDiagram(l1, l2, l3, l4, l5) {
+  const nodes = [
+    { layer: 'L1', title: '生理状态评估', cls: 'pn-l1', keyVals: [
+      `心脏负荷: ${l1.cardiacLoad}`,
+      `自主神经: ${l1.autonomicBalance}`,
+      `运动质量: ${l1.movQualityAdj}`,
+    ]},
+    { layer: 'L2', title: '心理情绪评估', cls: 'pn-l2', keyVals: [
+      `情绪: ${l2.quadrant}`,
+      `注意力: ${l2.attention}`,
+      `放松: ${l2.relaxation}`,
+    ]},
+    { layer: 'L3', title: '认知状态评估', cls: 'pn-l3', keyVals: [
+      `处理速度: ${l3.processingSpeed}`,
+      `执行功能: ${l3.execFunc}`,
+      `工作记忆: ${l3.workMem}`,
+    ]},
+    { layer: 'L4', title: '综合状态融合', cls: 'pn-l4', keyVals: [
+      `身体: ${l4.bodyScore}`,
+      `心理: ${l4.mindScore}`,
+      `脑: ${l4.brainScore}`,
+    ]},
+    { layer: 'L5', title: '推荐决策引擎', cls: 'pn-l5', keyVals: [
+      `推荐: ${l5.winnerZH}`,
+      `强度: ${l5.intensity}%`,
+      `置信度: ${l5.confidence}%`,
+    ]},
+    { layer: 'L6', title: 'VR适配输出', cls: 'pn-l6', keyVals: [
+      `场景/音频/视觉`,
+      `教练语音提示`,
+      `自适应触发器`,
+    ]},
+  ];
+
+  let html = '';
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    html += `<div class="pipe-node ${n.cls}" onclick="switchToLayerCard(${i + 1})">
+      <div class="pn-layer">${n.layer}</div>
+      <div class="pn-title">${n.title}</div>`;
+    for (const kv of n.keyVals) {
+      html += `<div class="pn-key-val">${kv}</div>`;
+    }
+    html += `</div>`;
+    if (i < nodes.length - 1) {
+      html += `<div class="pipe-arrow">→</div>`;
+    }
+  }
+  document.getElementById('pipelineDiagram').innerHTML = html;
+}
+
+function switchToLayerCard(layerNum) {
+  // Switch to Tab 1
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="tab-browse"]').classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-browse').classList.add('active');
+
+  // Open target card and scroll
+  const card = document.getElementById(`cardL${layerNum}`);
+  card.classList.add('open');
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  card.classList.add('pulse');
+  setTimeout(() => card.classList.remove('pulse'), 1500);
+
+  // Update minimap
+  updateMinimap(layerNum);
+}
+
+// ============================================================
+// FOOTER RENDERER
+// ============================================================
+
+function renderFooter(l5, l6, l2, l1) {
+  const type = l5.winner;
+  const badgeClassMap = {
+    rest: 'badge-rest', breathing: 'badge-breathing', light_movement: 'badge-light',
+    moderate_aerobic: 'badge-moderate', high_intensity: 'badge-high', recovery: 'badge-recovery', stop: 'badge-stop',
+  };
+
+  document.getElementById('footerBadge').textContent = l5.winnerZH;
+  document.getElementById('footerBadge').className = `rec-badge ${badgeClassMap[type] || 'badge-rest'}`;
+  document.getElementById('footerIntensity').textContent = `${l5.intensity}%`;
+  document.getElementById('footerDuration').textContent = `${l5.duration}分钟`;
+  document.getElementById('footerScene').textContent = l6.scene.split(' — ')[0];
+  document.getElementById('footerCoach').textContent = `"${l6.primaryPrompt}"`;
+  document.getElementById('footerConf').textContent = `${l5.confidence}%`;
+}
+
+// ============================================================
+// MINIMAP UPDATE
+// ============================================================
+
+function updateMinimap(activeLayer) {
+  document.querySelectorAll('.minimap-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.layer === String(activeLayer));
+  });
+}
+
+// ============================================================
+// MASTER PIPELINE
+// ============================================================
+
+let currentPipelineResult = null;
+
+function inputs() {
+  const result = {};
+  for (const def of SLIDER_DEFS) {
+    const el = document.getElementById(`slider_${def.id}`);
+    result[def.id] = parseFloat(el.value);
+  }
+  return result;
+}
+
+function setSliders(values) {
+  for (const [id, val] of Object.entries(values)) {
+    const el = document.getElementById(`slider_${id}`);
+    if (el) {
+      el.value = val;
+      const valSpan = document.getElementById(`slider_val_${id}`);
+      if (valSpan) valSpan.textContent = val;
+    }
+  }
+}
+
+function recomputePipeline() {
+  const inp = inputs();
+
+  // Layer 1
+  const l1 = computeLayer1(inp);
+  renderLayer1(l1);
+
+  // Layer 2
+  const l2 = computeLayer2(inp, l1);
+  renderLayer2(l2);
+
+  // Layer 3
+  const l3 = computeLayer3(inp);
+  renderLayer3(l3);
+
+  // Layer 4
+  const l4 = computeLayer4(l1, l2, l3, inp);
+  renderLayer4(l4);
+
+  // Layer 5
+  const l5 = computeLayer5(l1, l2, l3, l4, inp);
+  renderLayer5(l5);
+
+  // Layer 6
+  const l6 = computeLayer6(l5, l2, l1, l4);
+  renderLayer6(l6, l5);
+
+  // Footer
+  renderFooter(l5, l6, l2, l1);
+
+  // Data table
+  renderDataTable(l1, l2, l3, l4, l5, l6, inp);
+
+  // Pipeline diagram
+  renderPipelineDiagram(l1, l2, l3, l4, l5);
+
+  currentPipelineResult = { l1, l2, l3, l4, l5, l6, inp };
+}
+
+// ============================================================
+// SLIDER CREATION
+// ============================================================
+
+function createSliders() {
+  const groups = { body: 'sliderGroupBody', mind: 'sliderGroupMind', brain: 'sliderGroupBrain', move: 'sliderGroupMove' };
+
+  for (const def of SLIDER_DEFS) {
+    const container = document.getElementById(groups[def.group]);
+    const div = document.createElement('div');
+    div.className = `slider-group ${def.css || ''}`;
+    div.innerHTML = `
+      <div class="slider-label">
+        <span class="name">${def.label}</span>
+        <span class="unit">${def.unit}</span>
+        <span class="value" id="slider_val_${def.id}">${def.defaultVal}</span>
+      </div>
+      <div class="slider-desc">${def.desc}</div>
+      <div class="slider-row">
+        <span style="font-size:0.68rem;color:var(--text-muted);">${def.min}</span>
+        <input type="range" id="slider_${def.id}" min="${def.min}" max="${def.max}" step="${def.step}" value="${def.defaultVal}">
+        <span style="font-size:0.68rem;color:var(--text-muted);">${def.max}</span>
+      </div>`;
+    container.appendChild(div);
+
+    // Event listener
+    const slider = div.querySelector('input[type="range"]');
+    const valSpan = div.querySelector('.value');
+    slider.addEventListener('input', () => {
+      valSpan.textContent = parseFloat(slider.value);
+      document.getElementById('presetSelect').value = 'custom';
+    });
+  }
+}
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
+
+function setupEventHandlers() {
+  // Recalculate button
+  document.getElementById('btnRecalc').addEventListener('click', () => {
+    recomputePipeline();
+    // Pulse effect on cards
+    for (let i = 1; i <= 6; i++) {
+      const card = document.getElementById(`cardL${i}`);
+      card.classList.add('pulse');
+      setTimeout(() => card.classList.remove('pulse'), 600);
+    }
+  });
+
+  // Reset button
+  document.getElementById('btnReset').addEventListener('click', () => {
+    document.getElementById('presetSelect').value = 'resting_calm';
+    applyPreset('resting_calm');
+  });
+
+  // Preset selector
+  document.getElementById('presetSelect').addEventListener('change', (e) => {
+    if (e.target.value !== 'custom') {
+      applyPreset(e.target.value);
+    }
+  });
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Layer card collapse/expand
+  document.querySelectorAll('.layer-card-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.parentElement;
+      card.classList.toggle('open');
+      const layerNum = parseInt(header.dataset.layer);
+      if (card.classList.contains('open')) {
+        updateMinimap(layerNum);
+      }
+    });
+  });
+
+  // Minimap dot click
+  document.querySelectorAll('.minimap-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const layerNum = parseInt(dot.dataset.layer);
+      const card = document.getElementById(`cardL${layerNum}`);
+      card.classList.add('open');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('pulse');
+      setTimeout(() => card.classList.remove('pulse'), 1500);
+      updateMinimap(layerNum);
+    });
+  });
+}
+
+function applyPreset(presetKey) {
+  const preset = PRESETS[presetKey];
+  if (!preset) return;
+  const values = {};
+  for (const def of SLIDER_DEFS) {
+    values[def.id] = preset[def.id] !== undefined ? preset[def.id] : def.defaultVal;
+  }
+  setSliders(values);
+  recomputePipeline();
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+function init() {
+  createSliders();
+  setupEventHandlers();
+  recomputePipeline();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
